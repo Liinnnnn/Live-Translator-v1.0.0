@@ -25,6 +25,10 @@ class LiveTranslatorApp:
         self.create_scan_window()
         self.create_result_window()
         
+        # SỬA LỖI CHẠY NGẦM: Bắt sự kiện khi người dùng nhấn nút X đóng cửa sổ
+        self.scan_win.protocol("WM_DELETE_WINDOW", self.on_close_app)
+        self.res_win.protocol("WM_DELETE_WINDOW", self.on_close_app)
+        
     def create_scan_window(self):
         self.scan_win = tk.Toplevel()
         self.scan_win.title("Vùng Quét")
@@ -164,6 +168,20 @@ class LiveTranslatorApp:
         # Đẩy dữ liệu hiển thị về Main Thread của Tkinter an toàn để tránh crash ứng dụng
         if self.res_win.winfo_exists():
             self.res_win.after(0, lambda: self.lbl_text.config(text=text))
+
+    def on_close_app(self):
+        """ Hàm dọn dẹp bộ nhớ và giải phóng luồng chạy ngầm để đóng hoàn toàn ứng dụng """
+        self.is_translating = False # Phá vỡ vòng lặp dịch thuật ngầm ngay lập tức
+        time.sleep(0.1) # Chờ luồng phụ kịp phản hồi và thoát
+        
+        # Tiêu diệt tất cả giao diện và dừng vòng lặp chính của Tkinter
+        try:
+            self.scan_win.destroy()
+            self.res_win.destroy()
+            self.root.quit()
+            self.root.destroy()
+        except Exception:
+            pass
 
     def run(self):
         self.root.mainloop()
